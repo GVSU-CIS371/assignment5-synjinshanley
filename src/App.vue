@@ -72,6 +72,7 @@
 
     <div class="auth-row">
       <button @click="withGoogle">Sign in with Google</button>
+      <button v-if="beverageStore.user != null" @click="signOut">Sign-out</button>
     </div>
     <input
       v-model="beverageStore.currentName"
@@ -106,6 +107,7 @@ import { ref } from "vue";
 import Beverage from "./components/Beverage.vue";
 import { useBeverageStore } from "./stores/beverageStore";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { BeverageType } from "./types/beverage";
 
 const beverageStore = useBeverageStore();
 beverageStore.init();
@@ -128,11 +130,18 @@ const withGoogle = async () => {
       const user = result.user
       console.log("Signed in as", user?.email)
       beverageStore.setUser(result.user)
+      beverageStore.listenToBeverages();
     })
     .catch((err: any) => {
       console.error("Something went wrong,", err)
     })
 };
+
+const signOut = () => {
+  beverageStore.user = null
+  beverageStore.beverages = [] as BeverageType[]
+  showMessage("successfully signed out.")
+}
 
 const handleMakeBeverage = () => {
   const txt = beverageStore.makeBeverage();
