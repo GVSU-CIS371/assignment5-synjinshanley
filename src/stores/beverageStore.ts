@@ -144,7 +144,7 @@ export const useBeverageStore = defineStore("BeverageStore", {
         this.currentSyrup
       );
     },
-    makeBeverage() {
+    async makeBeverage() {
       if (this.user == null){
         return "No user logged in, please sign in first."
       }
@@ -168,7 +168,7 @@ export const useBeverageStore = defineStore("BeverageStore", {
           };
 
           try {
-            const docRef = addDoc(collection(db, "beverages"), newBeverage);
+            const docRef = await addDoc(collection(db, "beverages"), newBeverage);
             console.log("Beverage stored with ID:", docRef.id);
             this.currentBeverage = this.beverages[-1];
             return "Beverage " + this.currentName + " made successfully!"
