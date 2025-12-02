@@ -71,6 +71,7 @@
     </ul>
 
     <div class="auth-row">
+      <span v-if="beverageStore.user != null">Signed-in as {{ beverageStore.user?.displayName }}</span>
       <button @click="withGoogle">Sign in with Google</button>
       <button v-if="beverageStore.user != null" @click="signOut">Sign-out</button>
     </div>
