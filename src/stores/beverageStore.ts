@@ -15,11 +15,10 @@ import {
   getDocs,
   setDoc,
   doc,
+  addDoc,
   QuerySnapshot,
   QueryDocumentSnapshot,
   onSnapshot,
-  query,
-  where,
   Unsubscribe,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
@@ -145,7 +144,79 @@ export const useBeverageStore = defineStore("BeverageStore", {
         this.currentSyrup
       );
     },
-    makeBeverage() {},
-    setUser(user: User | null) {},
+    async makeBeverage() {
+      if (this.user == null){
+        return "No user logged in, please sign in first."
+      }
+      else {
+        if (this.currentName == null ||
+            this.currentBase == null ||
+            this.currentSyrup == null ||
+            this.currentCreamer == null ||
+            this.currentTemp == null
+            ) {
+              return "Please complete all beverage options and name before making a beverage."
+            }
+        else {
+          const newBeverage = {
+            name: this.currentName,
+            base: this.currentBase,
+            syrup: this.currentSyrup,
+            creamer: this.currentCreamer,
+            temp: this.currentTemp,
+            uid: this.user.uid
+          };
+
+          try {
+            const docRef = await addDoc(collection(db, "beverages"), newBeverage);
+            console.log("Beverage stored with ID:", docRef.id);
+            this.currentBeverage = this.beverages[-1];
+            return "Beverage " + this.currentName + " made successfully!"
+          } catch (e) {
+            console.error("Error adding beverage:", e);
+            return "Error adding beverage."
+          }
+        }
+      }
+    },
+    setUser(user: User | null) {
+      this.user = user
+      const bevs = collection(db, "beverages")
+      const userBevs = [] as BeverageType[] 
+      getDocs(bevs)
+        .then((qs: QuerySnapshot) => {
+            qs.forEach((doc) => {
+              const beverageData = { id: doc.id, ...doc.data() } as BeverageType
+              const match = doc.data().uid == user?.uid
+              if (match) {
+                userBevs.push(beverageData)
+              }
+            })
+            this.beverages = userBevs
+            this.currentBeverage = userBevs[0]
+        })
+        .catch((error: any) => {
+          console.error("Error getting user beverages:", error);
+        });
+    },
+    listenToBeverages() {
+      const beveragesRef = collection(db, "beverages");
+
+      // Set up real-time listener
+      onSnapshot(beveragesRef, (qs) => {
+        const userBevs = [] as BeverageType[] 
+        qs.forEach((doc) => {
+          const beverageData = { id: doc.id, ...doc.data() } as BeverageType
+          const match = doc.data().uid == this.user?.uid
+          if (match) {
+            userBevs.push(beverageData)
+          }
+        })
+        this.beverages = userBevs
+        this.currentBeverage = userBevs[0]
+
+        console.log("Realtime beverages:", this.beverages);
+      });
+    }
   },
 });

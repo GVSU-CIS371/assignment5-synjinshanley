@@ -71,7 +71,9 @@
     </ul>
 
     <div class="auth-row">
+      <span v-if="beverageStore.user != null">Signed-in as {{ beverageStore.user?.displayName }}</span>
       <button @click="withGoogle">Sign in with Google</button>
+      <button v-if="beverageStore.user != null" @click="signOut">Sign-out</button>
     </div>
     <input
       v-model="beverageStore.currentName"
@@ -79,7 +81,8 @@
       placeholder="Beverage Name"
     />
 
-    <button @click="handleMakeBeverage">🍺 Make Beverage</button>
+    <button @click="handleMakeBeverage" :disabled="beverageStore.user == null">🍺 Make Beverage</button>
+
 
     <p v-if="message" class="status-message">
       {{ message }}
@@ -104,6 +107,8 @@
 import { ref } from "vue";
 import Beverage from "./components/Beverage.vue";
 import { useBeverageStore } from "./stores/beverageStore";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { BeverageType } from "./types/beverage";
 
 const beverageStore = useBeverageStore();
 beverageStore.init();
@@ -117,7 +122,27 @@ const showMessage = (txt: string) => {
   }, 5000);
 };
 
-const withGoogle = async () => {};
+const withGoogle = async () => {
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+
+  signInWithPopup(auth, provider)
+    .then((result) => {
+      const user = result.user
+      console.log("Signed in as", user?.email)
+      beverageStore.setUser(result.user)
+      beverageStore.listenToBeverages();
+    })
+    .catch((err: any) => {
+      console.error("Something went wrong,", err)
+    })
+};
+
+const signOut = () => {
+  beverageStore.user = null
+  beverageStore.beverages = [] as BeverageType[]
+  showMessage("successfully signed out.")
+}
 
 const handleMakeBeverage = () => {
   const txt = beverageStore.makeBeverage();
