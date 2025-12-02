@@ -79,7 +79,8 @@
       placeholder="Beverage Name"
     />
 
-    <button @click="handleMakeBeverage">🍺 Make Beverage</button>
+    <button @click="handleMakeBeverage" :disabled="beverageStore.user == null">🍺 Make Beverage</button>
+
 
     <p v-if="message" class="status-message">
       {{ message }}
@@ -104,6 +105,7 @@
 import { ref } from "vue";
 import Beverage from "./components/Beverage.vue";
 import { useBeverageStore } from "./stores/beverageStore";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const beverageStore = useBeverageStore();
 beverageStore.init();
@@ -117,7 +119,21 @@ const showMessage = (txt: string) => {
   }, 5000);
 };
 
-const withGoogle = async () => {};
+const withGoogle = async () => {
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+
+  signInWithPopup(auth, provider)
+    .then((result) => {
+      const user = result.user
+      console.log("Signed in as", user?.email)
+      beverageStore.setUser(result.user)
+    })
+    .catch((err: any) => {
+      console.error("Something went wrong,", err)
+    })
+  
+};
 
 const handleMakeBeverage = () => {
   const txt = beverageStore.makeBeverage();

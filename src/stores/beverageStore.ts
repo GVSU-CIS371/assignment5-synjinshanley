@@ -15,6 +15,7 @@ import {
   getDocs,
   setDoc,
   doc,
+  addDoc,
   QuerySnapshot,
   QueryDocumentSnapshot,
   onSnapshot,
@@ -145,7 +146,41 @@ export const useBeverageStore = defineStore("BeverageStore", {
         this.currentSyrup
       );
     },
-    makeBeverage() {},
-    setUser(user: User | null) {},
+    makeBeverage() {
+      if (this.user == null){
+        return "No user logged in, please sign in first."
+      }
+      else {
+        if (this.currentName == null ||
+            this.currentBase == null ||
+            this.currentSyrup == null ||
+            this.currentCreamer == null ||
+            this.currentTemp == null
+            ) {
+              return "Please complete all beverage options and name before making a beverage."
+            }
+        else {
+          const newBeverage = {
+            name: this.currentName,
+            base: this.currentBase,
+            syrup: this.currentSyrup,
+            creamer: this.currentCreamer,
+            temp: this.currentTemp,
+          };
+
+          try {
+            const docRef = addDoc(collection(db, "beverages"), newBeverage);
+            console.log("Beverage stored with ID:", docRef.id);
+            return "Beverage " + this.currentName + " made successfully!"
+          } catch (e) {
+            console.error("Error adding beverage:", e);
+            return "Error adding beverage."
+          }
+        }
+      }
+    },
+    setUser(user: User | null) {
+      
+    },
   },
 });
