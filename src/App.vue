@@ -132,7 +132,6 @@ const withGoogle = async () => {
     .catch((err: any) => {
       console.error("Something went wrong,", err)
     })
-  
 };
 
 const handleMakeBeverage = () => {

@@ -16,6 +16,7 @@ import {
   setDoc,
   doc,
   addDoc,
+  getDoc,
   QuerySnapshot,
   QueryDocumentSnapshot,
   onSnapshot,
@@ -180,7 +181,24 @@ export const useBeverageStore = defineStore("BeverageStore", {
       }
     },
     setUser(user: User | null) {
-      
+      this.user = user
+      const bevs = collection(db, "beverages")
+      const userBevs = [] as BeverageType[] 
+      getDocs(bevs)
+        .then((qs: QuerySnapshot) => {
+            qs.forEach((doc) => {
+              const beverageData = { id: doc.id, ...doc.data() } as BeverageType
+              const match = doc.data().uid == user?.uid
+              if (match) {
+                userBevs.push(beverageData)
+              }
+            })
+            this.beverages = userBevs
+            this.currentBeverage = userBevs[0]
+        })
+        .catch((error: any) => {
+          console.error("Error getting user beverages:", error);
+        });
     },
   },
 });
